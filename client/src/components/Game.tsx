@@ -78,6 +78,7 @@ export default function Game() {
   });
 
   const { phase, ready, start, end, restart } = useGame();
+  const { playHit, playSuccess, backgroundMusic, isMuted } = useAudio();
   
   // Track score changes for sound effects
   const [lastScore, setLastScore] = useState(0);
@@ -95,7 +96,7 @@ export default function Game() {
       setLastScore(gameState.score);
     }
   }, [gameState.score, lastScore, phase, playSuccess]);
-  const { playHit, playSuccess, backgroundMusic, isMuted } = useAudio();
+  
   const controls = useControls();
 
   // Initialize platforms for endless runner
