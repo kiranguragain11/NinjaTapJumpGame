@@ -1,0 +1,60 @@
+Apply these edits to my current Tap Ninja React JS game:
+
+1. **Start Screen & Logo**
+   - When the game first loads, do NOT start the game loop.
+   - Display a centered Nepali title: "किरण गुरागाईं निन्जा"
+     - Use Google Font: "Sawarabi Mincho".
+     - White text with a subtle shadow for readability.
+   - Start the game ONLY when the user clicks anywhere on the canvas.
+   - After click, hide the title and start the game loop.
+
+2. **Performance**
+   - Ensure the game runs at 60 FPS using `requestAnimationFrame`.
+   - Optimize rendering to avoid unnecessary React re-renders.
+   - Move heavy rendering into Canvas draw calls, not React state updates.
+
+3. **Gameplay Speed**
+   - Start with a slow platform scroll speed (e.g., 3 px/frame).
+   - Gradually increase the speed over time for difficulty progression.
+
+4. **Platforms**
+   - Remove the static wooden platform.
+   - Use Japanese rooftop tiles from:
+     https://opengameart.org/content/japanese-style-platform-tileset
+   - Platforms should scroll from right to left.
+   - Randomize gap widths between platforms.
+   - Endless generation of platforms.
+
+5. **Ninja Character**
+   - Replace placeholder box with an actual ninja sprite:
+     - Sprite source: https://kenney.nl/assets/platformer-character (use a ninja variant).
+   - Animate the ninja’s running frames when on ground.
+   - Play jump animation or still frame when in the air.
+
+6. **Jump Mechanics**
+   - Keep the ninja horizontally fixed but allow smooth vertical movement for jumps.
+   - Single jump with one tap / press space.
+   - Double jump if tapped again while in the air.
+   - Gravity should feel natural (adjust velocity and gravity constants).
+
+7. **Score System**
+   - Give +1 point each time the ninja successfully jumps to another platform.
+   - Add coins or gems on some platforms:
+     - Collecting a coin/gem gives +5 bonus points.
+     - Use a free coin/gem sprite (e.g., from Kenney.nl).
+   - Show score at top-left in "Sawarabi Mincho" font.
+
+8. **Parallax Background**
+   - Add a Japanese city skyline as a slow-moving background.
+   - Background should move slower than platforms for parallax effect.
+   - Keep background smooth without jerky movement.
+
+9. **Atmosphere**
+   - Add falling cherry blossom petals in the foreground.
+   - Use particles.js (https://vincentgarreau.com/particles.js/) to render petals.
+   - Petals move diagonally downward slowly for a calming anime vibe.
+
+10. **Game Over**
+    - If ninja falls into a gap, stop the game loop.
+    - Show "Game Over" in big red text and a "Click to Restart" prompt.
+    - Clicking restarts game from the start screen.

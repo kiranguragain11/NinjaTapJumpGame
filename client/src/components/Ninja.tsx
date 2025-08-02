@@ -9,6 +9,7 @@ export default class Ninja {
       velocityY: number;
       isGrounded: boolean;
       animationFrame: number;
+      jumpFrame?: number;
     },
     camera: { x: number }
   ) {
@@ -26,6 +27,10 @@ export default class Ninja {
     const bobOffset = ninja.isGrounded ? Math.sin(runCycle) * 1 : 0;
     const armSwing = ninja.isGrounded ? Math.sin(runCycle) * 3 : 0;
     const legMove = ninja.isGrounded ? Math.sin(runCycle) * 4 : 0;
+    
+    // Jump animation
+    const jumpFrame = ninja.jumpFrame || 0;
+    const jumpScale = ninja.isGrounded ? 1 : 1 + Math.sin(jumpFrame * 0.5) * 0.1;
     
     // Shadow
     if (ninja.isGrounded) {

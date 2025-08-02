@@ -6,6 +6,7 @@ import Platform from './Platform';
 import Background from './Background';
 import Particles from './Particles';
 import GameUI from './GameUI';
+import Coin from './Coin';
 import { checkCollision } from '../utils/collision';
 import { applyGravity, updateVelocity } from '../utils/physics';
 import { useGame } from '../lib/stores/useGame';
@@ -19,6 +20,15 @@ interface PlatformData {
   id: number;
 }
 
+interface CoinData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  id: number;
+  collected: boolean;
+}
+
 interface GameState {
   ninja: {
     x: number;
@@ -29,14 +39,18 @@ interface GameState {
     isGrounded: boolean;
     canDoubleJump: boolean;
     animationFrame: number;
+    jumpFrame: number;
   };
   platforms: PlatformData[];
+  coins: CoinData[];
   camera: {
     x: number;
   };
   score: number;
   gameSpeed: number;
   platformIdCounter: number;
+  coinIdCounter: number;
+  platformsJumped: number;
 }
 
 export default function Game() {
@@ -50,16 +64,37 @@ export default function Game() {
       height: 32,
       isGrounded: false,
       canDoubleJump: true,
-      animationFrame: 0
+      animationFrame: 0,
+      jumpFrame: 0
     },
     platforms: [],
+    coins: [],
     camera: { x: 0 },
     score: 0,
-    gameSpeed: 4,
-    platformIdCounter: 0
+    gameSpeed: 3,
+    platformIdCounter: 0,
+    coinIdCounter: 0,
+    platformsJumped: 0
   });
 
-  const { phase, start, end, restart } = useGame();
+  // Track score changes for sound effects
+  const [lastScore, setLastScore] = useState(0);
+  
+  useEffect(() => {
+    if (gameState.score > lastScore && phase === 'playing') {
+      const scoreDiff = gameState.score - lastScore;
+      if (scoreDiff >= 5) {
+        // Coin collected (5 points)
+        playSuccess();
+      } else if (scoreDiff === 1) {
+        // Platform jump (1 point)
+        playSuccess();
+      }
+      setLastScore(gameState.score);
+    }
+  }, [gameState.score, lastScore, phase, playSuccess]);
+
+  const { phase, ready, start, end, restart } = useGame();
   const { playHit, playSuccess, backgroundMusic, isMuted } = useAudio();
   const controls = useControls();
 
@@ -77,11 +112,11 @@ export default function Game() {
       id: platformId++
     });
     
-    // Generate initial set of platforms
+    // Generate initial set of platforms with coins
     for (let i = 1; i < 10; i++) {
       const prevPlatform = initialPlatforms[i - 1];
-      const gap = 100 + Math.random() * 80; // Random gap between 100-180px
-      const heightVariation = (Math.random() - 0.5) * 60; // Height can vary by ±30px
+      const gap = 120 + Math.random() * 100; // Random gap between 120-220px
+      const heightVariation = (Math.random() - 0.5) * 80; // Height can vary by ±40px
       
       initialPlatforms.push({
         x: prevPlatform.x + prevPlatform.width + gap,
@@ -92,10 +127,28 @@ export default function Game() {
       });
     }
     
+    // Add coins to some platforms
+    const initialCoins: CoinData[] = [];
+    let coinId = 0;
+    initialPlatforms.forEach((platform, index) => {
+      if (index > 0 && Math.random() < 0.4) { // 40% chance for coin
+        initialCoins.push({
+          x: platform.x + platform.width / 2 - 10,
+          y: platform.y - 25,
+          width: 20,
+          height: 20,
+          id: coinId++,
+          collected: false
+        });
+      }
+    });
+    
     setGameState(prev => ({ 
       ...prev, 
       platforms: initialPlatforms,
-      platformIdCounter: platformId 
+      coins: initialCoins,
+      platformIdCounter: platformId,
+      coinIdCounter: coinId
     }));
   }, []);
 
@@ -137,9 +190,11 @@ export default function Game() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        if (phase === 'ready') {
+        if (phase === 'start') {
+          ready();
+        } else if (phase === 'ready') {
           start();
-        } else {
+        } else if (phase === 'playing') {
           handleJump();
         }
       }
@@ -149,10 +204,14 @@ export default function Game() {
     };
 
     const handleClick = () => {
-      if (phase === 'ready') {
+      if (phase === 'start') {
+        ready();
+      } else if (phase === 'ready') {
         start();
-      } else {
+      } else if (phase === 'playing') {
         handleJump();
+      } else if (phase === 'ended') {
+        restart();
       }
     };
 
@@ -165,33 +224,42 @@ export default function Game() {
       window.removeEventListener('click', handleClick);
       window.removeEventListener('touchstart', handleClick);
     };
-  }, [handleJump, phase, start, restart]);
+  }, [handleJump, phase, ready, start, restart]);
 
   const gameLoop = useCallback(() => {
     if (phase !== 'playing') return;
 
     setGameState(prev => {
       const newState = { ...prev };
+      let wasGrounded = newState.ninja.isGrounded;
       
       // Apply gravity to ninja
       newState.ninja = applyGravity(newState.ninja);
       
-      // Update ninja animation frame for running effect
+      // Update ninja animation frames
       newState.ninja.animationFrame = (newState.ninja.animationFrame + 1) % 8;
+      if (!newState.ninja.isGrounded) {
+        newState.ninja.jumpFrame = (newState.ninja.jumpFrame + 1) % 4;
+      }
       
-      // Move all platforms to the left to simulate ninja running forward
+      // Move all platforms and coins to the left to simulate ninja running forward
       newState.platforms = newState.platforms.map(platform => ({
         ...platform,
         x: platform.x - newState.gameSpeed
       }));
       
-      // Update score based on time/distance
-      newState.score += 1;
+      newState.coins = newState.coins.map(coin => ({
+        ...coin,
+        x: coin.x - newState.gameSpeed
+      }));
+      
+      // Update score based on time (distance traveled)
+      newState.score += Math.floor(newState.gameSpeed / 10);
       
       // Increase difficulty over time (speed increases gradually)
-      newState.gameSpeed = Math.min(4 + newState.score * 0.002, 12);
+      newState.gameSpeed = Math.min(3 + newState.score * 0.001, 10);
       
-      // Check platform collisions
+      // Check platform collisions and award points for successful jumps
       let onPlatform = false;
       newState.ninja.isGrounded = false;
       
@@ -205,7 +273,21 @@ export default function Game() {
             newState.ninja.isGrounded = true;
             newState.ninja.canDoubleJump = true;
             onPlatform = true;
+            
+            // Award point for successful platform jump
+            if (!wasGrounded) {
+              newState.platformsJumped++;
+              newState.score += 1;
+            }
           }
+        }
+      });
+      
+      // Check coin collisions
+      newState.coins.forEach(coin => {
+        if (!coin.collected && checkCollision(newState.ninja, coin)) {
+          coin.collected = true;
+          newState.score += 5; // Bonus points for coins
         }
       });
       
@@ -224,8 +306,8 @@ export default function Game() {
       
       // Add new platforms when needed
       if (rightmostPlatform.x < 1200) {
-        const gap = 120 + Math.random() * 100; // Random gap between 120-220px
-        const heightVariation = (Math.random() - 0.5) * 80; // Height varies ±40px
+        const gap = 120 + Math.random() * 120; // Random gap between 120-240px
+        const heightVariation = (Math.random() - 0.5) * 100; // Height varies ±50px
         const baseHeight = 350; // Base platform height
         
         const newPlatform: PlatformData = {
@@ -237,11 +319,26 @@ export default function Game() {
         };
         
         newState.platforms.push(newPlatform);
+        
+        // Add coin to some new platforms
+        if (Math.random() < 0.4) { // 40% chance for coin
+          newState.coins.push({
+            x: newPlatform.x + newPlatform.width / 2 - 10,
+            y: newPlatform.y - 25,
+            width: 20,
+            height: 20,
+            id: newState.coinIdCounter++,
+            collected: false
+          });
+        }
       }
       
-      // Remove platforms that have moved off screen (left side)
+      // Remove platforms and coins that have moved off screen (left side)
       newState.platforms = newState.platforms.filter(
         platform => platform.x + platform.width > -100
+      );
+      newState.coins = newState.coins.filter(
+        coin => coin.x + coin.width > -100
       );
       
       return newState;
@@ -271,6 +368,13 @@ export default function Game() {
     // Render platforms (no camera offset since they move themselves)
     gameState.platforms.forEach(platform => {
       Platform.render(ctx, platform, { x: 0 }); // No camera offset needed
+    });
+    
+    // Render coins
+    gameState.coins.forEach(coin => {
+      if (!coin.collected) {
+        Coin.render(ctx, coin, { x: 0 });
+      }
     });
     
     // Render ninja (stationary in screen space)
@@ -308,12 +412,15 @@ export default function Game() {
           height: 32,
           isGrounded: false,
           canDoubleJump: true,
-          animationFrame: 0
+          animationFrame: 0,
+          jumpFrame: 0
         },
         camera: { x: 0 },
         score: 0,
-        gameSpeed: 4
+        gameSpeed: 3,
+        platformsJumped: 0
       }));
+      setLastScore(0);
     }
   }, [phase]);
 
@@ -333,6 +440,7 @@ export default function Game() {
         phase={phase}
         onRestart={restart}
         onStart={start}
+        onReady={ready}
       />
     </div>
   );

@@ -53,16 +53,15 @@ function App() {
           fontSize: '4rem',
           marginBottom: '1rem',
           textShadow: '0 4px 8px rgba(0,0,0,0.3)',
-          background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
+          color: 'white'
         }}>
-          タップ忍者
+          किरण गुरागाईं निन्जा
         </h1>
         <h2 style={{
           fontSize: '2.5rem',
           marginBottom: '2rem',
-          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          color: 'white'
         }}>
           Sakura Run
         </h2>

@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { getLocalStorage, setLocalStorage } from '../lib/utils';
 import { useAudio } from '../lib/stores/useAudio';
 import { GamePhase } from '../lib/stores/useGame';
@@ -7,16 +8,21 @@ interface GameUIProps {
   phase: GamePhase;
   onRestart: () => void;
   onStart: () => void;
+  onReady: () => void;
 }
 
-export default function GameUI({ score, phase, onRestart, onStart }: GameUIProps) {
+export default function GameUI({ score, phase, onRestart, onStart, onReady }: GameUIProps) {
   const { toggleMute, isMuted } = useAudio();
   
-  // Get and update high score
+  // Get high score
   const highScore = getLocalStorage('ninja-high-score') || 0;
-  if (score > highScore) {
-    setLocalStorage('ninja-high-score', score);
-  }
+  
+  // Update high score when score changes
+  useEffect(() => {
+    if (score > highScore) {
+      setLocalStorage('ninja-high-score', score);
+    }
+  }, [score, highScore]);
 
   const uiStyle = {
     position: 'absolute' as const,
@@ -90,6 +96,43 @@ export default function GameUI({ score, phase, onRestart, onStart }: GameUIProps
         {isMuted ? '🔇' : '🔊'}
       </button>
 
+      {/* Start Screen */}
+      {phase === 'start' && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          textAlign: 'center',
+          background: 'rgba(0, 0, 0, 0.7)',
+          padding: '60px',
+          borderRadius: '20px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <h1 style={{ 
+            fontSize: '4rem', 
+            marginBottom: '1rem',
+            color: 'white',
+            textShadow: '0 4px 8px rgba(0,0,0,0.5)',
+            fontFamily: 'Sawarabi Mincho, serif'
+          }}>
+            किरण गुरागाईं निन्जा
+          </h1>
+          <h2 style={{ 
+            fontSize: '2.5rem', 
+            marginBottom: '2rem',
+            color: '#ff69b4',
+            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+          }}>
+            Sakura Run
+          </h2>
+          <p style={{ fontSize: '1.2rem', marginBottom: '2rem', opacity: 0.9 }}>
+            Jump across Japanese rooftops in this endless runner!<br/>
+            Click anywhere to begin your ninja adventure!
+          </p>
+        </div>
+      )}
+
       {/* Ready Screen */}
       {phase === 'ready' && (
         <div style={{
@@ -108,7 +151,8 @@ export default function GameUI({ score, phase, onRestart, onStart }: GameUIProps
           </h2>
           <p style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>
             Tap SPACE or Click to jump!<br/>
-            Double tap for double jump!
+            Double tap for double jump!<br/>
+            Collect golden coins for bonus points!
           </p>
           <button
             onClick={onStart}
