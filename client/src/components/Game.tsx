@@ -77,6 +77,8 @@ export default function Game() {
     platformsJumped: 0
   });
 
+  const { phase, ready, start, end, restart } = useGame();
+  
   // Track score changes for sound effects
   const [lastScore, setLastScore] = useState(0);
   
@@ -93,8 +95,6 @@ export default function Game() {
       setLastScore(gameState.score);
     }
   }, [gameState.score, lastScore, phase, playSuccess]);
-
-  const { phase, ready, start, end, restart } = useGame();
   const { playHit, playSuccess, backgroundMusic, isMuted } = useAudio();
   const controls = useControls();
 
