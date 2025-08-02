@@ -11,6 +11,14 @@ import { applyGravity, updateVelocity } from '../utils/physics';
 import { useGame } from '../lib/stores/useGame';
 import { useAudio } from '../lib/stores/useAudio';
 
+interface PlatformData {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  id: number;
+}
+
 interface GameState {
   ninja: {
     x: number;
@@ -20,18 +28,15 @@ interface GameState {
     height: number;
     isGrounded: boolean;
     canDoubleJump: boolean;
+    animationFrame: number;
   };
-  platforms: Array<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }>;
+  platforms: PlatformData[];
   camera: {
     x: number;
   };
   score: number;
   gameSpeed: number;
+  platformIdCounter: number;
 }
 
 export default function Game() {
@@ -44,30 +49,54 @@ export default function Game() {
       width: 32,
       height: 32,
       isGrounded: false,
-      canDoubleJump: true
+      canDoubleJump: true,
+      animationFrame: 0
     },
     platforms: [],
     camera: { x: 0 },
     score: 0,
-    gameSpeed: 2
+    gameSpeed: 4,
+    platformIdCounter: 0
   });
 
   const { phase, start, end, restart } = useGame();
   const { playHit, playSuccess, backgroundMusic, isMuted } = useAudio();
   const controls = useControls();
 
-  // Initialize platforms
+  // Initialize platforms for endless runner
   useEffect(() => {
-    const initialPlatforms = [];
-    for (let i = 0; i < 20; i++) {
+    const initialPlatforms: PlatformData[] = [];
+    let platformId = 0;
+    
+    // First platform where ninja starts
+    initialPlatforms.push({
+      x: 0,
+      y: 350,
+      width: 200,
+      height: 30,
+      id: platformId++
+    });
+    
+    // Generate initial set of platforms
+    for (let i = 1; i < 10; i++) {
+      const prevPlatform = initialPlatforms[i - 1];
+      const gap = 100 + Math.random() * 80; // Random gap between 100-180px
+      const heightVariation = (Math.random() - 0.5) * 60; // Height can vary by ±30px
+      
       initialPlatforms.push({
-        x: i * 150 + (Math.random() * 50 - 25),
-        y: 400 + Math.sin(i * 0.5) * 50,
-        width: 120,
-        height: 20
+        x: prevPlatform.x + prevPlatform.width + gap,
+        y: Math.max(200, Math.min(400, prevPlatform.y + heightVariation)),
+        width: 120 + Math.random() * 80, // Platform width varies
+        height: 30,
+        id: platformId++
       });
     }
-    setGameState(prev => ({ ...prev, platforms: initialPlatforms }));
+    
+    setGameState(prev => ({ 
+      ...prev, 
+      platforms: initialPlatforms,
+      platformIdCounter: platformId 
+    }));
   }, []);
 
   // Start background music
@@ -147,21 +176,30 @@ export default function Game() {
       // Apply gravity to ninja
       newState.ninja = applyGravity(newState.ninja);
       
-      // Move camera forward
-      newState.camera.x += newState.gameSpeed;
+      // Update ninja animation frame for running effect
+      newState.ninja.animationFrame = (newState.ninja.animationFrame + 1) % 8;
       
-      // Update score
-      newState.score = Math.floor(newState.camera.x / 10);
+      // Move all platforms to the left to simulate ninja running forward
+      newState.platforms = newState.platforms.map(platform => ({
+        ...platform,
+        x: platform.x - newState.gameSpeed
+      }));
       
-      // Increase difficulty over time
-      newState.gameSpeed = Math.min(2 + newState.score * 0.001, 8);
+      // Update score based on time/distance
+      newState.score += 1;
+      
+      // Increase difficulty over time (speed increases gradually)
+      newState.gameSpeed = Math.min(4 + newState.score * 0.002, 12);
       
       // Check platform collisions
       let onPlatform = false;
+      newState.ninja.isGrounded = false;
+      
       newState.platforms.forEach(platform => {
         if (checkCollision(newState.ninja, platform)) {
-          if (newState.ninja.velocityY > 0 && 
-              newState.ninja.y < platform.y) {
+          // Landing on top of platform
+          if (newState.ninja.velocityY >= 0 && 
+              newState.ninja.y + newState.ninja.height - 10 <= platform.y) {
             newState.ninja.y = platform.y - newState.ninja.height;
             newState.ninja.velocityY = 0;
             newState.ninja.isGrounded = true;
@@ -171,28 +209,39 @@ export default function Game() {
         }
       });
       
-      // Check if ninja fell
+      // Check if ninja fell below screen
       if (newState.ninja.y > 600) {
         playHit();
         end();
         return newState;
       }
       
-      // Generate new platforms
-      const lastPlatform = newState.platforms[newState.platforms.length - 1];
-      if (lastPlatform && lastPlatform.x < newState.camera.x + 1200) {
-        const newPlatform = {
-          x: lastPlatform.x + 150 + Math.random() * 100,
-          y: 400 + Math.sin(newState.platforms.length * 0.5) * 80,
-          width: 120 + Math.random() * 60,
-          height: 20
+      // Generate new platforms on the right side
+      const rightmostPlatform = newState.platforms.reduce((rightmost, platform) => 
+        platform.x > rightmost.x ? platform : rightmost, 
+        { x: -1000, y: 0, width: 0, height: 0, id: -1 }
+      );
+      
+      // Add new platforms when needed
+      if (rightmostPlatform.x < 1200) {
+        const gap = 120 + Math.random() * 100; // Random gap between 120-220px
+        const heightVariation = (Math.random() - 0.5) * 80; // Height varies ±40px
+        const baseHeight = 350; // Base platform height
+        
+        const newPlatform: PlatformData = {
+          x: rightmostPlatform.x + rightmostPlatform.width + gap,
+          y: Math.max(200, Math.min(450, baseHeight + heightVariation)),
+          width: 100 + Math.random() * 100, // Width varies 100-200px
+          height: 30,
+          id: newState.platformIdCounter++
         };
+        
         newState.platforms.push(newPlatform);
       }
       
-      // Remove old platforms
+      // Remove platforms that have moved off screen (left side)
       newState.platforms = newState.platforms.filter(
-        platform => platform.x > newState.camera.x - 200
+        platform => platform.x + platform.width > -100
       );
       
       return newState;
@@ -211,16 +260,21 @@ export default function Game() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Render background
-    Background.render(ctx, gameState.camera, canvas.width, canvas.height);
+    // Calculate background camera position (slower parallax effect)
+    const backgroundCamera = { 
+      x: gameState.score * 0.5 // Background moves much slower than platforms
+    };
     
-    // Render platforms
+    // Render background with parallax effect
+    Background.render(ctx, backgroundCamera, canvas.width, canvas.height);
+    
+    // Render platforms (no camera offset since they move themselves)
     gameState.platforms.forEach(platform => {
-      Platform.render(ctx, platform, gameState.camera);
+      Platform.render(ctx, platform, { x: 0 }); // No camera offset needed
     });
     
-    // Render ninja
-    Ninja.render(ctx, gameState.ninja, gameState.camera);
+    // Render ninja (stationary in screen space)
+    Ninja.render(ctx, gameState.ninja, { x: 0 }); // No camera offset needed
     
   }, [gameState]);
 
@@ -253,11 +307,12 @@ export default function Game() {
           width: 32,
           height: 32,
           isGrounded: false,
-          canDoubleJump: true
+          canDoubleJump: true,
+          animationFrame: 0
         },
         camera: { x: 0 },
         score: 0,
-        gameSpeed: 2
+        gameSpeed: 4
       }));
     }
   }, [phase]);

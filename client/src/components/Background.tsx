@@ -18,19 +18,19 @@ export default class Background {
     ctx.fillRect(0, 0, width, height);
     
     // Mountains (parallax layer 1 - slowest)
-    const mountainOffset = (camera.x * 0.1) % (width * 2);
+    const mountainOffset = (camera.x * 0.05) % (width * 2);
     ctx.fillStyle = 'rgba(75, 0, 130, 0.6)';
     this.renderMountains(ctx, -mountainOffset, height * 0.6, width * 2, height * 0.4);
     this.renderMountains(ctx, width * 2 - mountainOffset, height * 0.6, width * 2, height * 0.4);
     
     // City skyline (parallax layer 2 - medium speed)
-    const cityOffset = (camera.x * 0.3) % (width * 1.5);
+    const cityOffset = (camera.x * 0.15) % (width * 1.5);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     this.renderCity(ctx, -cityOffset, height * 0.7, width * 1.5, height * 0.3);
     this.renderCity(ctx, width * 1.5 - cityOffset, height * 0.7, width * 1.5, height * 0.3);
     
     // Distant buildings (parallax layer 3 - faster)
-    const buildingOffset = (camera.x * 0.5) % width;
+    const buildingOffset = (camera.x * 0.25) % width;
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     this.renderBuildings(ctx, -buildingOffset, height * 0.8, width, height * 0.2);
     this.renderBuildings(ctx, width - buildingOffset, height * 0.8, width, height * 0.2);

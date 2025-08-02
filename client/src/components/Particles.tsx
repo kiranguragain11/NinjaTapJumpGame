@@ -12,39 +12,39 @@ export default function Particles() {
       window.particlesJS('particles-js', {
         particles: {
           number: {
-            value: 80,
+            value: 120,
             density: {
               enable: true,
               value_area: 800
             }
           },
           color: {
-            value: ['#ffb3d9', '#ff9999', '#ffccdd', '#ffd9e6']
+            value: ['#ffb3d9', '#ff69b4', '#ffc0cb', '#ffd1dc', '#ff91a4']
           },
           shape: {
             type: 'circle',
             stroke: {
-              width: 0,
-              color: '#000000'
+              width: 1,
+              color: '#ffb3d9'
             }
           },
           opacity: {
-            value: 0.6,
+            value: 0.8,
             random: true,
             anim: {
               enable: true,
-              speed: 1,
-              opacity_min: 0.1,
+              speed: 1.5,
+              opacity_min: 0.3,
               sync: false
             }
           },
           size: {
-            value: 5,
+            value: 8,
             random: true,
             anim: {
               enable: true,
-              speed: 2,
-              size_min: 1,
+              speed: 3,
+              size_min: 2,
               sync: false
             }
           },
@@ -53,8 +53,8 @@ export default function Particles() {
           },
           move: {
             enable: true,
-            speed: 2,
-            direction: 'bottom-right',
+            speed: 1.5,
+            direction: 'bottom',
             random: true,
             straight: false,
             out_mode: 'out',
