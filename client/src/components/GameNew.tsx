@@ -61,7 +61,7 @@ export default function Game({ onGameOver }: GameProps) {
     coins: [],
     camera: { x: 0 },
     score: 0,
-    gameSpeed: 1.5, // Slower initial speed
+    gameSpeed: 3, // Faster initial speed for better gameplay
     backgroundX: 0
   });
 
@@ -141,12 +141,12 @@ export default function Game({ onGameOver }: GameProps) {
       const ninja = { ...prev.ninja };
       
       if (ninja.isGrounded) {
-        ninja.velocityY = -12;
+        ninja.velocityY = -15; // Faster, snappier jump
         ninja.isGrounded = false;
         ninja.canDoubleJump = true;
         if (playSuccess) playSuccess();
       } else if (ninja.canDoubleJump) {
-        ninja.velocityY = -10;
+        ninja.velocityY = -13; // Fast double jump
         ninja.canDoubleJump = false;
         if (playSuccess) playSuccess();
       }
@@ -164,9 +164,9 @@ export default function Game({ onGameOver }: GameProps) {
         const newState = { ...prev };
         const ninja = { ...newState.ninja };
         
-        // Apply gravity
+        // Apply stronger gravity for fast jumps
         if (!ninja.isGrounded) {
-          ninja.velocityY += 0.5;
+          ninja.velocityY += 0.8; // Increased gravity for snappy jumps
         }
         ninja.y += ninja.velocityY;
         
@@ -214,8 +214,8 @@ export default function Game({ onGameOver }: GameProps) {
           const platformsCleared = Math.floor(ninja.x / 200);
           if (platformsCleared > Math.floor((ninja.x - newState.gameSpeed) / 200)) {
             newState.score += 1;
-            // Increase speed slightly with each successful jump
-            newState.gameSpeed = Math.min(4, newState.gameSpeed + 0.05);
+            // Increase speed with each successful jump
+            newState.gameSpeed = Math.min(6, newState.gameSpeed + 0.1);
           }
         }
         
@@ -291,30 +291,39 @@ export default function Game({ onGameOver }: GameProps) {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Anime-style Japanese city skyline (moving at same speed as platforms)
-      ctx.fillStyle = 'rgba(60, 60, 120, 0.4)';
+      // Multi-layer city background (moving at same speed as platforms)
+      // Back layer - distant buildings
+      ctx.fillStyle = 'rgba(40, 40, 80, 0.3)';
+      for (let i = 0; i < 20; i++) {
+        const buildingX = (i * 100) - (gameState.backgroundX * 0.8) % 2000;
+        const buildingHeight = 60 + Math.sin(i * 0.5) * 30;
+        ctx.fillRect(buildingX, canvas.height - buildingHeight - 100, 80, buildingHeight);
+      }
+      
+      // Middle layer - main buildings
+      ctx.fillStyle = 'rgba(60, 60, 120, 0.5)';
       for (let i = 0; i < 15; i++) {
         const buildingX = (i * 150) - (gameState.backgroundX) % 2250;
-        const buildingHeight = 80 + Math.sin(i * 0.7) * 40;
+        const buildingHeight = 120 + Math.sin(i * 0.7) * 50;
         
-        // Main building
+        // Main building structure
         ctx.fillRect(buildingX, canvas.height - buildingHeight, 120, buildingHeight);
         
-        // Building details - windows
-        ctx.fillStyle = 'rgba(255, 255, 100, 0.6)';
+        // Building windows
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.7)';
         for (let w = 0; w < 3; w++) {
-          for (let h = 0; h < Math.floor(buildingHeight / 20); h++) {
-            if (Math.random() > 0.3) {
-              ctx.fillRect(buildingX + 20 + w * 30, canvas.height - buildingHeight + h * 20 + 10, 8, 8);
+          for (let h = 0; h < Math.floor(buildingHeight / 25); h++) {
+            if ((w + h + i) % 3 !== 0) { // Consistent window pattern
+              ctx.fillRect(buildingX + 20 + w * 30, canvas.height - buildingHeight + h * 25 + 15, 10, 10);
             }
           }
         }
         
-        // Rooftop details
-        ctx.fillStyle = 'rgba(80, 80, 140, 0.6)';
-        ctx.fillRect(buildingX + 10, canvas.height - buildingHeight - 10, 100, 10);
+        // Building rooftop
+        ctx.fillStyle = 'rgba(80, 80, 140, 0.7)';
+        ctx.fillRect(buildingX + 5, canvas.height - buildingHeight - 15, 110, 15);
         
-        ctx.fillStyle = 'rgba(60, 60, 120, 0.4)';
+        ctx.fillStyle = 'rgba(60, 60, 120, 0.5)';
       }
       
       ctx.save();
@@ -341,20 +350,29 @@ export default function Game({ onGameOver }: GameProps) {
         }
       });
       
-      // Draw coins
-      ctx.fillStyle = '#FFD700';
+      // Draw animated coins
       gameState.coins.forEach(coin => {
         if (!coin.collected) {
-          ctx.beginPath();
-          ctx.arc(coin.x + coin.width/2, coin.y + coin.height/2, coin.width/2, 0, Math.PI * 2);
-          ctx.fill();
+          const bounceOffset = Math.sin(Date.now() * 0.008 + coin.id) * 3;
+          const spinAngle = (Date.now() * 0.01 + coin.id) % (Math.PI * 2);
+          
+          ctx.save();
+          ctx.translate(coin.x + coin.width/2, coin.y + coin.height/2 + bounceOffset);
+          ctx.rotate(spinAngle);
+          
+          // Main coin body
+          ctx.fillStyle = '#FFD700';
+          ctx.fillRect(-coin.width/2, -coin.height/2, coin.width, coin.height);
+          
+          // Coin highlight
+          ctx.fillStyle = '#FFFF99';
+          ctx.fillRect(-coin.width/2 + 2, -coin.height/2 + 2, coin.width - 4, 4);
           
           // Coin sparkle
-          ctx.fillStyle = '#FFFF00';
-          ctx.beginPath();
-          ctx.arc(coin.x + coin.width/2 - 3, coin.y + coin.height/2 - 3, 2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#FFD700';
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(-2, -2, 4, 4);
+          
+          ctx.restore();
         }
       });
       
@@ -421,14 +439,18 @@ export default function Game({ onGameOver }: GameProps) {
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
       <canvas
         ref={canvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
+        width={Math.min(window.innerWidth, 1200)}
+        height={Math.min(window.innerHeight, 800)}
         onClick={handleCanvasClick}
         onTouchStart={handleCanvasClick}
         style={{
           display: 'block',
           touchAction: 'none',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          margin: '0 auto',
+          backgroundColor: '#000'
         }}
       />
       
@@ -437,14 +459,18 @@ export default function Game({ onGameOver }: GameProps) {
         position: 'absolute',
         top: '20px',
         left: '20px',
-        fontSize: '2rem',
+        fontSize: window.innerWidth < 768 ? '1.8rem' : '2.5rem',
         fontFamily: '"Orbitron", sans-serif',
-        fontWeight: 'bold',
-        color: '#fff',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-        zIndex: 10
+        fontWeight: '900',
+        color: '#00FF41',
+        textShadow: '0 0 10px rgba(0,255,65,0.8), 2px 2px 4px rgba(0,0,0,0.9)',
+        zIndex: 10,
+        background: 'rgba(0,0,0,0.3)',
+        padding: '10px 20px',
+        borderRadius: '10px',
+        backdropFilter: 'blur(5px)'
       }}>
-        Score: {gameState.score}
+        SCORE: {gameState.score}
       </div>
       
       {/* Tap to start instructions */}
@@ -455,8 +481,8 @@ export default function Game({ onGameOver }: GameProps) {
           left: '50%',
           transform: 'translateX(-50%)',
           textAlign: 'center',
-          color: 'rgba(255, 255, 255, 0.7)',
-          fontSize: '1.2rem',
+          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: window.innerWidth < 768 ? '1rem' : '1.2rem',
           fontFamily: '"Orbitron", sans-serif',
           textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
           zIndex: 10,

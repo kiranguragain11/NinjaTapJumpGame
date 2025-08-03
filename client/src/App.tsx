@@ -46,7 +46,7 @@ function App() {
         textAlign: 'center'
       }}>
         <h1 style={{
-          fontSize: '4rem',
+          fontSize: window.innerWidth < 768 ? '2.5rem' : '4rem',
           marginBottom: '1rem',
           textShadow: '0 4px 8px rgba(0,0,0,0.5)',
           color: 'white',
@@ -55,20 +55,21 @@ function App() {
           kiranGuragain Game
         </h1>
         <p style={{
-          fontSize: '1.5rem',
+          fontSize: window.innerWidth < 768 ? '1.2rem' : '1.5rem',
           marginBottom: '3rem',
           textShadow: '0 2px 4px rgba(0,0,0,0.3)',
           color: '#ffeb3b',
           fontWeight: '400',
-          opacity: 0.9
+          opacity: 0.9,
+          padding: window.innerWidth < 768 ? '0 20px' : '0'
         }}>
           An anime-style rooftop ninja runner.
         </p>
         <button
           onClick={() => setGameStarted(true)}
           style={{
-            fontSize: '1.5rem',
-            padding: '20px 40px',
+            fontSize: window.innerWidth < 768 ? '1.2rem' : '1.5rem',
+            padding: window.innerWidth < 768 ? '15px 30px' : '20px 40px',
             background: 'linear-gradient(45deg, #ff4081, #3f51b5)',
             border: 'none',
             borderRadius: '10px',
@@ -76,13 +77,15 @@ function App() {
             cursor: 'pointer',
             textShadow: '0 2px 4px rgba(0,0,0,0.3)',
             boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-            transition: 'transform 0.2s',
+            transition: 'all 0.3s ease',
             fontFamily: '"Orbitron", sans-serif',
             fontWeight: '700',
             textTransform: 'uppercase'
           }}
           onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
           onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onTouchStart={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           Start Game
         </button>

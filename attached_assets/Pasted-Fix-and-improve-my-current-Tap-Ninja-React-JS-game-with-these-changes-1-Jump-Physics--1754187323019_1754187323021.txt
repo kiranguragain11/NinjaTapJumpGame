@@ -1,0 +1,61 @@
+Fix and improve my current Tap Ninja React JS game with these changes:
+
+1. **Jump Physics**
+   - Make the jump arc **fast and snappy**:
+     - Increase initial jump velocity.
+     - Increase gravity so the ninja comes down faster.
+     - No slow floaty jumps — jumps should be quick like in platformer games.
+   - Ninja should be able to double jump with a second quick tap in the air.
+
+2. **Platform Speed & Difficulty**
+   - Platforms should scroll toward the left **faster**.
+   - Start at a decent running speed — not painfully slow.
+   - Increase platform scroll speed slightly every time the player lands on a new rooftop.
+   - Keep the gameplay smooth at **60 FPS** using `requestAnimationFrame`.
+
+3. **Coins**
+   - Spawn coins above some rooftops.
+   - Collecting a coin adds **+5 points**.
+   - Coins should animate slightly (spin or bounce) to be noticeable.
+   - Use a free coin sprite from Kenney.nl or OpenGameArt.org.
+
+4. **Background & Buildings**
+   - Add a **layer of buildings** under the rooftops so the city looks full.
+   - Background should scroll at the **same pace as platforms** (no weird parallax speed mismatch).
+   - Remove the empty gap under rooftops — it looks unrealistic.
+
+5. **Score System**
+   - +1 point for each successful jump to another platform.
+   - +5 for each coin collected.
+   - Display score at the top-left using `"Orbitron"` or `"Press Start 2P"` font from Google Fonts.
+   - Make score text larger and always visible.
+
+6. **Start Game Glitch**
+   - Fix the bug where clicking "Start Game" doesn’t immediately start the game.
+   - First click should:
+     - Hide the start screen instantly.
+     - Load the game window.
+     - Show a **"Tap to Start"** faded message.
+     - First tap after that should start movement immediately — no multiple clicks needed.
+
+7. **Mobile Responsiveness**
+   - Game canvas should resize automatically to fit mobile screens.
+   - Touch events should work the same as clicks.
+   - UI elements (score, start button, messages) should be scaled for mobile readability.
+
+8. **Ninja Sprite**
+   - Keep using a proper ninja sprite (Kenney.nl or similar).
+   - Animate running when on ground.
+   - Show a jump frame when in air.
+   - The ninja must always face forward — no flipping backwards.
+
+9. **Game Flow**
+   - Always start with the ninja standing on a platform.
+   - After "Start Game" → show game canvas → first tap starts the run.
+   - No extra start button inside the game window.
+   - If game over → show "Game Over" and "Click to Restart" → return to start screen.
+
+10. **Visual Polish**
+    - Add smooth transitions for UI elements.
+    - Use soft shadows for text and UI to make them stand out.
+    - Keep bright, saturated colors for the ninja, coins, and rooftops so they pop.
