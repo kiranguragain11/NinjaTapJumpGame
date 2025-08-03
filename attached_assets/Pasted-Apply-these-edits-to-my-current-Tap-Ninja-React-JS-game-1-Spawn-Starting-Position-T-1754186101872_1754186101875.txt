@@ -1,0 +1,49 @@
+Apply these edits to my current Tap Ninja React JS game:
+
+1. **Spawn & Starting Position**
+   - The ninja must always start on top of a platform, not in mid-air or off-screen.
+   - The spawn point should be fixed near the left side of the first platform.
+   - Remove random spawning — start position should be consistent.
+
+2. **Start Button Flow**
+   - On page load, show a centered start button labeled: "Start Game".
+   - When clicked, immediately load the game window and position the ninja on the first platform.
+   - After the game window is visible, there should be NO other start button.
+   - The game should begin when the player taps/clicks anywhere on the canvas — this should make the ninja jump toward the next platform and start movement.
+
+3. **Game Speed**
+   - The background must move at the same speed as the foreground/platforms.
+   - Remove the overly fast parallax scroll effect.
+   - Keep a consistent, smooth scroll speed that gradually increases as the game progresses.
+
+4. **Score System**
+   - Score should only increase when:
+     a) The ninja successfully jumps to a new platform (+1 point).
+     b) A coin/gem is collected (+5 points).
+   - Show score in the top-left corner in a stylish English font such as "Orbitron" or "Press Start 2P" from Google Fonts.
+   - Remove time-based scoring.
+
+5. **Gameplay**
+   - Platforms should endlessly generate with randomized gaps.
+   - The ninja should run automatically after the first click/tap.
+   - The ninja's jump should naturally land on the next platform if the timing is correct.
+
+6. **Ninja Sprite**
+   - Keep the ninja as an actual animated sprite (Kenney.nl ninja or similar).
+   - Animate running while on a platform.
+   - Play jump animation when in the air.
+
+7. **Coins / Gems**
+   - Coins or gems should spawn on some platforms.
+   - Collecting them should immediately add to the score.
+   - Use free sprites from Kenney.nl or OpenGameArt.org.
+
+8. **Background**
+   - Use a calm anime-style city skyline or Japanese rooftop background that moves at the SAME speed as the platforms.
+   - Remove the hyper-fast scrolling effect.
+   - No Japanese text anywhere — English only.
+
+9. **Game Over**
+   - If the ninja misses a platform, trigger game over instantly.
+   - Show "Game Over" centered with "Click to Restart" below it.
+   - Restart should bring you back to the start button screen.

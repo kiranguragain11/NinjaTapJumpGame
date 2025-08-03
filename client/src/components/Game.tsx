@@ -53,16 +53,22 @@ interface GameState {
   platformsJumped: number;
 }
 
-export default function Game() {
+interface GameProps {
+  onGameOver: () => void;
+}
+
+export default function Game({ onGameOver }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState<GameState>({
     ninja: {
-      x: 100,
-      y: 300,
+      x: 50,  // Fixed spawn position on first platform
+      y: 318, // On top of first platform (350 - 32)
       velocityY: 0,
       width: 32,
       height: 32,
-      isGrounded: false,
+      isGrounded: true,
       canDoubleJump: true,
       animationFrame: 0,
       jumpFrame: 0
@@ -71,33 +77,13 @@ export default function Game() {
     coins: [],
     camera: { x: 0 },
     score: 0,
-    gameSpeed: 3,
+    gameSpeed: 2, // Slower consistent speed
     platformIdCounter: 0,
     coinIdCounter: 0,
     platformsJumped: 0
   });
 
-  const { phase, ready, start, end, restart } = useGame();
   const { playHit, playSuccess, backgroundMusic, isMuted } = useAudio();
-  
-  // Track score changes for sound effects
-  const [lastScore, setLastScore] = useState(0);
-  
-  useEffect(() => {
-    if (gameState.score > lastScore && phase === 'playing') {
-      const scoreDiff = gameState.score - lastScore;
-      if (scoreDiff >= 5) {
-        // Coin collected (5 points)
-        playSuccess();
-      } else if (scoreDiff === 1) {
-        // Platform jump (1 point)
-        playSuccess();
-      }
-      setLastScore(gameState.score);
-    }
-  }, [gameState.score, lastScore, phase, playSuccess]);
-  
-  const controls = useControls();
 
   // Initialize platforms for endless runner
   useEffect(() => {
