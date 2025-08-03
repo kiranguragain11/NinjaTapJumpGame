@@ -50,3 +50,9 @@ canvas {
     user-select: none;
   }
 }
+
+/* Fade animation for tap to start */
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}

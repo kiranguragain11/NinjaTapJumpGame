@@ -1,0 +1,67 @@
+Apply these edits to my current Tap Ninja React JS game:
+
+1. **Spawn & Starting Position**
+   - The ninja must always start standing on top of the first platform.
+   - The spawn point should be fixed near the left side of that first platform.
+   - Remove any random or mid-air spawning — start position must be consistent.
+
+2. **Start Screen**
+   - On page load, display a centered **start screen**:
+     - Large title: "kiranGuragain Game"
+     - Small description below: "An anime-style rooftop ninja runner."
+     - Big "Start Game" button centered.
+   - When "Start Game" is clicked:
+     - Transition to the game window (canvas).
+     - Do NOT show the start button again after entering the game.
+
+3. **Tap-to-Start Inside Game Window**
+   - Inside the game window (before movement begins), show faded small text at the bottom center: "Tap to start".
+   - First tap/click should:
+     - Trigger the ninja's first jump toward the next platform.
+     - Start the game movement loop.
+
+4. **Game Speed**
+   - Background and platforms must move at the **same speed** (remove fast parallax effect).
+   - Initial speed should be slow for easy starting.
+   - **Increase speed** slightly every time the player successfully jumps to the next rooftop.
+   - Keep smooth acceleration so the game feels natural.
+
+5. **Score System**
+   - +1 point for each successful jump to another platform.
+   - +5 points for each coin/gem collected.
+   - Remove any time-based scoring.
+   - Display the score in the top-left corner using a stylish English font such as:
+     - `"Orbitron"` or `"Press Start 2P"` from Google Fonts.
+   - Make the score text clean and readable.
+
+6. **Platforms**
+   - Generate rooftops endlessly with random gap widths.
+   - The ninja should run automatically after the first tap.
+   - Jump physics must allow the player to naturally land on the next platform if timed correctly.
+
+7. **Ninja Sprite**
+   - Replace placeholder box with an actual ninja sprite from Kenney.nl or similar.
+   - Animate running when on a platform.
+   - Use a jump frame/animation when in the air.
+
+8. **Coins / Gems**
+   - Spawn coins or gems on some rooftops.
+   - Collecting them should instantly add to the score.
+   - Use free sprites from Kenney.nl or OpenGameArt.org.
+
+9. **Background**
+   - Use an anime-style Japanese city skyline or rooftop background that scrolls with the same speed as platforms.
+   - Keep it visually appealing but not distracting.
+   - No Japanese text anywhere — English only.
+
+10. **Game Over**
+    - If the ninja falls off a platform, end the game immediately.
+    - Display "Game Over" in large bold letters.
+    - Below it, show "Click to Restart".
+    - Restart should return the player to the start screen with the "Start Game" button.
+
+11. **Visual Appeal**
+    - Add soft drop shadows to text.
+    - Use smooth animations for UI transitions.
+    - Make sure ninja sprite, coins, and rooftops have vibrant colors.
+    - Keep gameplay smooth at 60 FPS.

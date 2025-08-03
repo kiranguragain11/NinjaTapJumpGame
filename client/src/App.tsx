@@ -52,17 +52,18 @@ function App() {
           color: 'white',
           fontWeight: '900'
         }}>
-          TAP NINJA
+          kiranGuragain Game
         </h1>
-        <h2 style={{
-          fontSize: '2rem',
+        <p style={{
+          fontSize: '1.5rem',
           marginBottom: '3rem',
           textShadow: '0 2px 4px rgba(0,0,0,0.3)',
           color: '#ffeb3b',
-          fontWeight: '400'
+          fontWeight: '400',
+          opacity: 0.9
         }}>
-          Sakura Run
-        </h2>
+          An anime-style rooftop ninja runner.
+        </p>
         <button
           onClick={() => setGameStarted(true)}
           style={{

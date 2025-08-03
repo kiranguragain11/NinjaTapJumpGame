@@ -48,7 +48,7 @@ export default function Game({ onGameOver }: GameProps) {
   const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState<GameState>({
     ninja: {
-      x: 50,
+      x: 30, // Fixed spawn on left side of first platform
       y: 318, // On top of first platform (350 - 32)
       velocityY: 0,
       width: 32,
@@ -61,7 +61,7 @@ export default function Game({ onGameOver }: GameProps) {
     coins: [],
     camera: { x: 0 },
     score: 0,
-    gameSpeed: 2,
+    gameSpeed: 1.5, // Slower initial speed
     backgroundX: 0
   });
 
@@ -214,13 +214,15 @@ export default function Game({ onGameOver }: GameProps) {
           const platformsCleared = Math.floor(ninja.x / 200);
           if (platformsCleared > Math.floor((ninja.x - newState.gameSpeed) / 200)) {
             newState.score += 1;
+            // Increase speed slightly with each successful jump
+            newState.gameSpeed = Math.min(4, newState.gameSpeed + 0.05);
           }
         }
         
         // Game over check - if ninja falls below screen
         if (ninja.y > 600) {
           setGameOver(true);
-          setTimeout(() => onGameOver(), 2000);
+          setTimeout(() => onGameOver(), 3000);
           return newState;
         }
         
@@ -251,8 +253,7 @@ export default function Game({ onGameOver }: GameProps) {
           }
         }
         
-        // Gradually increase game speed
-        newState.gameSpeed = Math.min(4, 2 + newState.score * 0.01);
+        // Speed increases naturally with successful jumps (handled above)
         
         newState.ninja = ninja;
         return newState;
@@ -290,25 +291,54 @@ export default function Game({ onGameOver }: GameProps) {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Simple background buildings (moving at same speed as platforms)
-      ctx.fillStyle = 'rgba(100, 100, 100, 0.3)';
-      for (let i = 0; i < 10; i++) {
-        const buildingX = (i * 200) - (gameState.backgroundX * 0.3) % 2000;
-        const buildingHeight = 100 + Math.sin(i) * 50;
-        ctx.fillRect(buildingX, canvas.height - buildingHeight, 150, buildingHeight);
+      // Anime-style Japanese city skyline (moving at same speed as platforms)
+      ctx.fillStyle = 'rgba(60, 60, 120, 0.4)';
+      for (let i = 0; i < 15; i++) {
+        const buildingX = (i * 150) - (gameState.backgroundX) % 2250;
+        const buildingHeight = 80 + Math.sin(i * 0.7) * 40;
+        
+        // Main building
+        ctx.fillRect(buildingX, canvas.height - buildingHeight, 120, buildingHeight);
+        
+        // Building details - windows
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.6)';
+        for (let w = 0; w < 3; w++) {
+          for (let h = 0; h < Math.floor(buildingHeight / 20); h++) {
+            if (Math.random() > 0.3) {
+              ctx.fillRect(buildingX + 20 + w * 30, canvas.height - buildingHeight + h * 20 + 10, 8, 8);
+            }
+          }
+        }
+        
+        // Rooftop details
+        ctx.fillStyle = 'rgba(80, 80, 140, 0.6)';
+        ctx.fillRect(buildingX + 10, canvas.height - buildingHeight - 10, 100, 10);
+        
+        ctx.fillStyle = 'rgba(60, 60, 120, 0.4)';
       }
       
       ctx.save();
       ctx.translate(-gameState.camera.x, 0);
       
-      // Draw platforms
-      ctx.fillStyle = '#8B4513';
+      // Draw rooftop platforms
       gameState.platforms.forEach(platform => {
-        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-        // Platform top highlight
-        ctx.fillStyle = '#D2B48C';
-        ctx.fillRect(platform.x, platform.y, platform.width, 5);
+        // Rooftop base
         ctx.fillStyle = '#8B4513';
+        ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        
+        // Rooftop surface
+        ctx.fillStyle = '#CD853F';
+        ctx.fillRect(platform.x, platform.y, platform.width, 8);
+        
+        // Rooftop edge highlight
+        ctx.fillStyle = '#F4A460';
+        ctx.fillRect(platform.x, platform.y, platform.width, 3);
+        
+        // Rooftop tiles pattern
+        ctx.fillStyle = '#A0522D';
+        for (let i = 0; i < platform.width; i += 20) {
+          ctx.fillRect(platform.x + i, platform.y + 3, 1, 5);
+        }
       });
       
       // Draw coins
@@ -328,27 +358,56 @@ export default function Game({ onGameOver }: GameProps) {
         }
       });
       
-      // Draw ninja
+      // Draw ninja sprite
       const ninja = gameState.ninja;
+      
       if (ninja.isGrounded && ninja.isRunning) {
-        // Running animation - simple rectangle with legs
-        ctx.fillStyle = '#000080';
-        ctx.fillRect(ninja.x, ninja.y, ninja.width, ninja.height - 8);
-        // Running legs
-        ctx.fillStyle = '#000040';
-        const legOffset = Math.sin(Date.now() * 0.01) * 3;
-        ctx.fillRect(ninja.x + 5, ninja.y + ninja.height - 8, 6, 8 + legOffset);
-        ctx.fillRect(ninja.x + 15, ninja.y + ninja.height - 8, 6, 8 - legOffset);
+        // Running ninja animation
+        ctx.fillStyle = '#2C3E50'; // Dark blue ninja suit
+        ctx.fillRect(ninja.x + 4, ninja.y + 4, 24, 24);
+        
+        // Ninja head
+        ctx.fillStyle = '#34495E';
+        ctx.fillRect(ninja.x + 8, ninja.y, 16, 12);
+        
+        // Running legs animation
+        const legOffset = Math.sin(Date.now() * 0.015) * 4;
+        ctx.fillStyle = '#2C3E50';
+        ctx.fillRect(ninja.x + 8, ninja.y + 24, 6, 8 + legOffset);
+        ctx.fillRect(ninja.x + 18, ninja.y + 24, 6, 8 - legOffset);
+        
+        // Arms animation
+        const armOffset = Math.sin(Date.now() * 0.015 + Math.PI) * 3;
+        ctx.fillRect(ninja.x + 2, ninja.y + 8 + armOffset, 4, 12);
+        ctx.fillRect(ninja.x + 26, ninja.y + 8 - armOffset, 4, 12);
+        
       } else {
-        // Jumping - single rectangle
-        ctx.fillStyle = '#000080';
-        ctx.fillRect(ninja.x, ninja.y, ninja.width, ninja.height);
+        // Jumping ninja
+        ctx.fillStyle = '#2C3E50';
+        ctx.fillRect(ninja.x + 4, ninja.y + 4, 24, 24);
+        
+        // Head
+        ctx.fillStyle = '#34495E';
+        ctx.fillRect(ninja.x + 8, ninja.y, 16, 12);
+        
+        // Extended legs for jumping
+        ctx.fillStyle = '#2C3E50';
+        ctx.fillRect(ninja.x + 10, ninja.y + 24, 5, 8);
+        ctx.fillRect(ninja.x + 17, ninja.y + 24, 5, 8);
+        
+        // Extended arms
+        ctx.fillRect(ninja.x + 2, ninja.y + 6, 4, 14);
+        ctx.fillRect(ninja.x + 26, ninja.y + 6, 4, 14);
       }
       
-      // Ninja eyes
-      ctx.fillStyle = '#FF0000';
-      ctx.fillRect(ninja.x + 8, ninja.y + 8, 4, 4);
-      ctx.fillRect(ninja.x + 16, ninja.y + 8, 4, 4);
+      // Ninja eyes (red glow)
+      ctx.fillStyle = '#E74C3C';
+      ctx.fillRect(ninja.x + 11, ninja.y + 4, 3, 3);
+      ctx.fillRect(ninja.x + 18, ninja.y + 4, 3, 3);
+      
+      // Ninja weapon on back
+      ctx.fillStyle = '#95A5A6';
+      ctx.fillRect(ninja.x + 26, ninja.y + 8, 2, 12);
       
       ctx.restore();
       
@@ -388,26 +447,22 @@ export default function Game({ onGameOver }: GameProps) {
         Score: {gameState.score}
       </div>
       
-      {/* Start instructions */}
+      {/* Tap to start instructions */}
       {!gameStarted && (
         <div style={{
           position: 'absolute',
-          top: '50%',
+          bottom: '50px',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
+          transform: 'translateX(-50%)',
           textAlign: 'center',
-          color: 'white',
-          fontSize: '1.5rem',
+          color: 'rgba(255, 255, 255, 0.7)',
+          fontSize: '1.2rem',
           fontFamily: '"Orbitron", sans-serif',
           textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-          zIndex: 10
+          zIndex: 10,
+          animation: 'fadeInOut 2s infinite'
         }}>
-          <div style={{ marginBottom: '20px', fontSize: '2rem' }}>
-            Ready to Run!
-          </div>
-          <div>
-            Click or tap anywhere to start jumping!
-          </div>
+          Tap to start
         </div>
       )}
       
