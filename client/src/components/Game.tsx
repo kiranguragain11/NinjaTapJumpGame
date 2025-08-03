@@ -204,7 +204,21 @@ export default function Game() {
       }
     };
 
-    const handleClick = () => {
+    const handleTouch = (e: TouchEvent) => {
+      e.preventDefault();
+      if (phase === 'start') {
+        ready();
+      } else if (phase === 'ready') {
+        start();
+      } else if (phase === 'playing') {
+        handleJump();
+      } else if (phase === 'ended') {
+        restart();
+      }
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      e.preventDefault();
       if (phase === 'start') {
         ready();
       } else if (phase === 'ready') {
@@ -218,12 +232,14 @@ export default function Game() {
 
     window.addEventListener('keydown', handleKeyPress);
     window.addEventListener('click', handleClick);
-    window.addEventListener('touchstart', handleClick);
+    window.addEventListener('touchstart', handleTouch, { passive: false });
+    window.addEventListener('touchend', handleTouch, { passive: false });
 
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
       window.removeEventListener('click', handleClick);
-      window.removeEventListener('touchstart', handleClick);
+      window.removeEventListener('touchstart', handleTouch);
+      window.removeEventListener('touchend', handleTouch);
     };
   }, [handleJump, phase, ready, start, restart]);
 
@@ -432,7 +448,11 @@ export default function Game() {
         style={{
           display: 'block',
           background: 'linear-gradient(180deg, #ff6b6b 0%, #ffa500 50%, #ff69b4 100%)',
-          touchAction: 'none'
+          touchAction: 'none',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+          WebkitTapHighlightColor: 'transparent'
         }}
       />
       <Particles />
