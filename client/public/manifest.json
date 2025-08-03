@@ -1,0 +1,26 @@
+{
+  "name": "kiranGuragain Game - Tap Ninja",
+  "short_name": "Tap Ninja",
+  "description": "An anime-style rooftop ninja runner game",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#3f51b5",
+  "orientation": "landscape-primary",
+  "icons": [
+    {
+      "src": "/ninja-icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ninja-icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "en"
+}

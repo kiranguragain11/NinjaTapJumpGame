@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Game from "./components/GameNew";
+import Game from "./components/GameOptimized";
 import { useAudio } from "./lib/stores/useAudio";
 import "@fontsource/inter";
 
