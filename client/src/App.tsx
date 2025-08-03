@@ -93,7 +93,10 @@ function App() {
     );
   }
 
-  return <Game onGameOver={() => setGameStarted(false)} />;
+  return <Game 
+    onGameOver={() => setGameStarted(false)} 
+    onReturnToMenu={() => setGameStarted(false)}
+  />;
 }
 
 export default App;

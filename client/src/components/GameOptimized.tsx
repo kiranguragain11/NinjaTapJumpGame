@@ -20,12 +20,14 @@ interface CoinData {
 
 interface GameProps {
   onGameOver: () => void;
+  onReturnToMenu: () => void;
 }
 
 // PWA Install component
 const PWAInstallButton = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [showButton, setShowButton] = useState(true);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -34,57 +36,78 @@ const PWAInstallButton = () => {
       setIsInstallable(true);
     };
 
+    // Check if already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isIOSStandalone = (window.navigator as any).standalone === true;
+    
+    if (isStandalone || isIOSStandalone) {
+      setShowButton(false);
+    }
+
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      setIsInstallable(false);
-      setDeferredPrompt(null);
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        setIsInstallable(false);
+        setDeferredPrompt(null);
+        setShowButton(false);
+      }
+    } else {
+      // Fallback for iOS or other browsers
+      alert('To install this app on your phone:\n\n• iOS: Tap the Share button and select "Add to Home Screen"\n• Android: Use the browser menu and select "Install App" or "Add to Home Screen"');
     }
   };
 
-  if (!isInstallable) return null;
+  if (!showButton) return null;
 
   return (
     <button
       onClick={handleInstall}
       style={{
         position: 'fixed',
-        top: '20px',
-        right: '20px',
+        top: window.innerWidth < 768 ? '15px' : '20px',
+        right: window.innerWidth < 768 ? '15px' : '20px',
         zIndex: 1000,
-        background: 'rgba(63, 81, 181, 0.9)',
+        background: 'linear-gradient(45deg, #3f51b5, #2196f3)',
         border: 'none',
         borderRadius: '50%',
-        width: '50px',
-        height: '50px',
+        width: window.innerWidth < 768 ? '60px' : '55px',
+        height: window.innerWidth < 768 ? '60px' : '55px',
         color: 'white',
         cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        fontSize: '20px',
+        boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+        fontSize: window.innerWidth < 768 ? '24px' : '20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'all 0.3s ease',
-        backdropFilter: 'blur(10px)'
+        backdropFilter: 'blur(10px)',
+        touchAction: 'manipulation'
+      }}
+      onTouchStart={(e) => {
+        e.currentTarget.style.transform = 'scale(1.1)';
+        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.5)';
+      }}
+      onTouchEnd={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
       }}
       onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
       onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
       title="Install Game"
     >
-      ⬇
+      📱
     </button>
   );
 };
 
-export default function Game({ onGameOver }: GameProps) {
+export default function Game({ onGameOver, onReturnToMenu }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
@@ -173,7 +196,10 @@ export default function Game({ onGameOver }: GameProps) {
   }, []);
 
   // Handle input
-  const handleCanvasClick = useCallback(() => {
+  const handleCanvasClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!gameStarted) {
       setGameStarted(true);
       gameStateRef.current.ninja.isRunning = true;
@@ -463,9 +489,30 @@ export default function Game({ onGameOver }: GameProps) {
     render();
   }, []);
 
-  // Initialize game
+  // Initialize game and reset state
   useEffect(() => {
     initializePlatforms();
+    
+    // Reset all game state when component mounts
+    const gameState = gameStateRef.current;
+    gameState.ninja = {
+      x: 30,
+      y: 318,
+      velocityY: 0,
+      width: 32,
+      height: 32,
+      isGrounded: true,
+      canDoubleJump: true,
+      isRunning: false
+    };
+    gameState.camera = { x: 0 };
+    gameState.score = 0;
+    gameState.gameSpeed = 3;
+    gameState.backgroundX = 0;
+    
+    setDisplayScore(0);
+    setGameStarted(false);
+    setGameOver(false);
   }, [initializePlatforms]);
 
   return (
@@ -474,56 +521,112 @@ export default function Game({ onGameOver }: GameProps) {
       
       <canvas
         ref={canvasRef}
-        width={Math.min(window.innerWidth, 1200)}
-        height={Math.min(window.innerHeight, 800)}
+        width={window.innerWidth}
+        height={window.innerHeight}
         onClick={handleCanvasClick}
         onTouchStart={handleCanvasClick}
+        onTouchEnd={(e) => e.preventDefault()}
+        onTouchMove={(e) => e.preventDefault()}
         style={{
           display: 'block',
           touchAction: 'none',
           cursor: 'pointer',
-          maxWidth: '100vw',
-          maxHeight: '100vh',
-          margin: '0 auto',
-          backgroundColor: '#000'
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: '#000',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none'
         }}
       />
       
       {/* Score display */}
       <div style={{
         position: 'absolute',
-        top: '20px',
-        left: '20px',
-        fontSize: window.innerWidth < 768 ? '1.8rem' : '2.5rem',
+        top: window.innerWidth < 768 ? '15px' : '20px',
+        left: window.innerWidth < 768 ? '15px' : '20px',
+        fontSize: window.innerWidth < 768 ? '1.5rem' : '2.5rem',
         fontFamily: '"Orbitron", sans-serif',
         fontWeight: '900',
         color: '#00FF41',
         textShadow: '0 0 10px rgba(0,255,65,0.8), 2px 2px 4px rgba(0,0,0,0.9)',
         zIndex: 10,
-        background: 'rgba(0,0,0,0.3)',
-        padding: '10px 20px',
+        background: 'rgba(0,0,0,0.4)',
+        padding: window.innerWidth < 768 ? '8px 16px' : '10px 20px',
         borderRadius: '10px',
-        backdropFilter: 'blur(5px)'
+        backdropFilter: 'blur(5px)',
+        userSelect: 'none'
       }}>
         SCORE: {displayScore}
       </div>
+
+      {/* Menu button */}
+      {gameStarted && !gameOver && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onReturnToMenu();
+          }}
+          style={{
+            position: 'absolute',
+            top: window.innerWidth < 768 ? '15px' : '20px',
+            right: window.innerWidth < 768 ? '85px' : '85px',
+            zIndex: 15,
+            background: 'rgba(255, 69, 58, 0.9)',
+            border: 'none',
+            borderRadius: '8px',
+            width: window.innerWidth < 768 ? '60px' : '55px',
+            height: window.innerWidth < 768 ? '40px' : '35px',
+            color: 'white',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            fontSize: window.innerWidth < 768 ? '12px' : '11px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease',
+            backdropFilter: 'blur(10px)',
+            fontFamily: '"Orbitron", sans-serif',
+            fontWeight: '700',
+            touchAction: 'manipulation',
+            userSelect: 'none'
+          }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.background = 'rgba(255, 69, 58, 1)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.background = 'rgba(255, 69, 58, 0.9)';
+          }}
+        >
+          MENU
+        </button>
+      )}
       
       {/* Tap to start instructions */}
       {!gameStarted && (
         <div style={{
           position: 'absolute',
-          bottom: '50px',
+          bottom: window.innerWidth < 768 ? '30%' : '20%',
           left: '50%',
           transform: 'translateX(-50%)',
           textAlign: 'center',
-          color: 'rgba(255, 255, 255, 0.8)',
-          fontSize: window.innerWidth < 768 ? '1rem' : '1.2rem',
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontSize: window.innerWidth < 768 ? '1.8rem' : '1.4rem',
           fontFamily: '"Orbitron", sans-serif',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+          textShadow: '2px 2px 8px rgba(0,0,0,0.9)',
           zIndex: 10,
-          animation: 'fadeInOut 2s infinite'
+          animation: 'fadeInOut 2s infinite',
+          background: 'rgba(0,0,0,0.3)',
+          padding: window.innerWidth < 768 ? '20px 30px' : '15px 25px',
+          borderRadius: '15px',
+          backdropFilter: 'blur(5px)',
+          userSelect: 'none',
+          pointerEvents: 'none'
         }}>
-          Tap to start
+          {window.innerWidth < 768 ? '👆 TAP TO START' : 'TAP TO START'}
         </div>
       )}
       
